@@ -23,9 +23,10 @@ using namespace std;
 class Global {
 public:
 	int xres, yres;
-    float w;
-    float dir;
+	float w;
+	float dir;
 	float pos[2];
+	unsigned char red;
 	Global();
 } g;
 
@@ -82,10 +83,11 @@ Global::Global()
 {
 	xres = 400;
 	yres = 200;
-    w = 20.0f;
-    dir = 25.0f;
-    pos[0] = 0.0f + w;
-    pos[1] = g.yres / 2.0f;
+	w = 20.0f;  // original value 20.0f
+	dir = 25.0f;
+	pos[0] = 0.0f + w;
+	pos[1] = g.yres / 2.0f;
+	red = 0;
 }
 
 X11_wrapper::~X11_wrapper()
@@ -249,6 +251,7 @@ void init_opengl(void)
 void physics()
 {
     g.pos[0] += g.dir;
+	
 	if (g.pos[0] >= (g.xres-g.w)) {
 		g.pos[0] = (g.xres-g.w);
 		g.dir = -g.dir;
@@ -261,17 +264,25 @@ void physics()
 
 void render()
 {
-	//
 	glClear(GL_COLOR_BUFFER_BIT);
-	//Draw box.
 	glPushMatrix();
-	glColor3ub(150, 160, 220);
-	glTranslatef(g.pos[0], g.pos[1], 0.0f);
-	glBegin(GL_QUADS);
-		glVertex2f(-g.w, -g.w);
-		glVertex2f(-g.w,  g.w);
-		glVertex2f( g.w,  g.w);
-		glVertex2f( g.w, -g.w);
+	if (g.xres < g.w * 2 || g.yres < g.w * 2){
+		// if window is smaller than square, do not draw square
+		// changing this if-else statement to the equivalent if statement breaks it
+	} else {
+		if (g.xres / 3 > 255) {	// g.red will always have a value between 0 and 255
+			g.red = 0;
+		} else {
+			g.red = 255 - g.xres / 3;
+		}
+		glColor3ub(g.red, 0, 255 - g.red);	// draw box
+		glTranslatef(g.pos[0], g.pos[1], 0.0f);
+		glBegin(GL_QUADS);
+			glVertex2f(-g.w, -g.w);
+			glVertex2f(-g.w,  g.w);
+			glVertex2f( g.w,  g.w);
+			glVertex2f( g.w, -g.w);
+	}
 	glEnd();
 	glPopMatrix();
 }
